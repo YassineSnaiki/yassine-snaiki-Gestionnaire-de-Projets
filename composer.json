@@ -1,0 +1,15 @@
+{
+    "name": "youco/yassine-snaiki-gestionnaire-de-projets",
+    "autoload": {
+        "psr-4": {
+            "app\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "yassine snaiki",
+            "email": "yassnaiki@gmail.com"
+        }
+    ],
+    "require": {}
+}
