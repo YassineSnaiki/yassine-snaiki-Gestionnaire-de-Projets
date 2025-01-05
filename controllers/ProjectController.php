@@ -7,6 +7,7 @@ use app\core\Controller;
 use app\helpers\Dump;
 use app\models\Project;
 use app\models\Task;
+use app\models\User;
 
 class ProjectController extends Controller {
     
@@ -18,8 +19,10 @@ class ProjectController extends Controller {
     }
     public function projects(){
         $projects = Project::findAll();
+        
         return $this->render('projects', [
-            'projects' => $projects
+            'projects' => $projects,
+            
         ]);
     }
     public function handleProjects($request) {
@@ -30,7 +33,7 @@ class ProjectController extends Controller {
         if (!empty($title) && !empty($description)) {
             $project = new Project($request->getBody());
             if ($project->save()) {
-                header('Location: /projects');
+                header('Location: /');
                 exit;
             }
         }
@@ -39,17 +42,38 @@ class ProjectController extends Controller {
             'projects' => $projects
         ]);
     }
+
+    public function deleteProject($request){
+        $project = Project::findOne($request->getBody()['project_id']);
+        if($project->delete()){
+            header('Location: /');
+            exit;
+        }
+    }
     public function kanban($request){
         $project_id = $request->getBody()['id'];
         if (!$project_id) {
-            header('Location: /projects');
+            header('Location: /');
             exit;
         }
         $project = Project::findOne($project_id);
+        
+        // Check if user is owner or contributor
+        $contributersIds = array_map(function ($contributer) {
+            return $contributer->id;
+        }, $project->contributers);
+
+        if ($project->user_id !== $_SESSION['user']['id'] && !in_array($_SESSION['user']['id'], $contributersIds)) {
+            header('Location: /');
+            exit;
+        }
+        
         $tasks = Task::findByProject($project_id);
+        $allUsers = User::getAll();
         return $this->render("kanban",[
             "project"=> $project,
-            "tasks"=> $tasks
+            "tasks"=> $tasks,
+            'allUsers'=>$allUsers
         ]);
     }
 
@@ -85,6 +109,39 @@ class ProjectController extends Controller {
         $task = Task::findById( $request->getBody()["task_id"] );
         if($task->delete()){
             header("Location: /kanban?id=$task->project_id");
+            exit;
+        }
+    }
+    public function addContribution($request){
+        $project = Project::findOne( $request->getBody()["project_id"] );
+        if($project->addContribution($request->getBody()["user_id"])){
+            $id = $request->getBody()['project_id'];
+            header("Location: /kanban?id=$id");
+            exit;
+        }   
+    }
+    public function deleteContribution($request){
+        $project = Project::findOne( $request->getBody()["project_id"] );
+        if($project->deleteContribution($request->getBody()["user_id"])){
+            $id = $request->getBody()['project_id'];
+            header("Location: /kanban?id=$id");
+            exit;
+        }   
+    }
+
+    public function assignTask($request){
+        $task = Task::findById( $request->getBody()["task_id"]);
+        if($task->assignTask($request->getBody()["user_id"])) {
+            $id = $task->project_id;
+            header("Location: /kanban?id=$id");
+            exit;
+        }
+    }
+    public function unassignTask($request){
+        $task = Task::findById( $request->getBody()["task_id"]);
+        if($task->unassignTask($request->getBody()["user_id"])) {
+            $id = $task->project_id;
+            header("Location: /kanban?id=$id");
             exit;
         }
     }
