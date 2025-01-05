@@ -87,6 +87,14 @@ class Database {
                 PRIMARY KEY (user_id, task_id)
             )
         ");
+        // contributions
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS contributions (
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                PRIMARY KEY (user_id, project_id)
+            )
+        ");
 
         // Create indexes for better performance
         $this->pdo->exec("

@@ -26,7 +26,7 @@ class AuthController extends Controller {
                                 'firstname' => $userInstance->firstname,
                                 'lastname' => $userInstance->lastname
                             ];
-                    header('Location: /projects');
+                    header('Location: /');
                     exit();
                 }else $_SESSION['error'] = "Invalid password";
             }
