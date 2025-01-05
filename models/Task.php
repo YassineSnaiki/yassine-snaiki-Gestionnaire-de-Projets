@@ -12,6 +12,7 @@ class Task {
     public string $status; // 'todo', 'doing', 'review', 'done'
     public string $tag;
     public string $created_at;
+    public $assignees = [];
 
     public function __construct($task){
         foreach ($task as $key => $value) {
@@ -19,15 +20,39 @@ class Task {
         }
     }
     public static function findByProject($project_id) {
-        $tasks = Application::$app->db->query("SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at ASC", [$project_id])->getAll();
+        // $tasks = Application::$app->db->query("SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at ASC", [$project_id])->getAll();
+        // $taskInstances = [];
+        // foreach ($tasks as $task) {
+        //     $assignees = Application::$app->db->query('select u.firstname,u.lastname,u.email from users u join assignments a on u.id = a.user_id join tasks t on a.task_id = t.id where t.id = ?',[$task['id']])->getAll();
+        //     $task['assignees'] = [];
+        //     foreach ($assignees as $assignee) {
+        //     $task['assignees'][]= new User($assignee);
+        // }
+        //     $taskInstances[] = new self($task);
+        // }
+        // return $taskInstances;
+        $tasksIds = Application::$app->db->query("SELECT id FROM tasks WHERE project_id = ? ORDER BY created_at ASC", [$project_id])->getAll();
+        $tasks = [];
+        foreach ($tasksIds as $taskId) {
+            $tasks[] = Task::findById($taskId['id']);
+        }
+        
         $taskInstances = [];
         foreach ($tasks as $task) {
-            $taskInstances[]= new self($task);
+            $taskInstances[] = new self($task);
         }
         return $taskInstances;
     }
+
+
+
     public static function findById($id) {
         $task = Application::$app->db->query("select * from tasks where id = ?",[$id])->getOne();
+        $assignees = Application::$app->db->query('select u.id, u.firstname,u.lastname,u.email from users u join assignments a on u.id = a.user_id join tasks t on a.task_id = t.id where t.id = ?',[$id])->getAll();
+        $task['assignees'] = [];
+        foreach ($assignees as $assignee) {
+            $task['assignees'][]= new User($assignee);
+        }
         $taskInstance = new self( $task );
         return $taskInstance;
     }
@@ -54,6 +79,14 @@ class Task {
     }
     public function changeTag($tag) {
         Application::$app->db->query("UPDATE tasks SET tag = ? WHERE id = ?",[$tag, $this->id]);
+        return true;
+    }
+    public function assignTask($user_id) {
+        Application::$app->db->query("insert into assignments(user_id,task_id) values(?,?)",[$user_id,$this->id]);
+        return true;
+    }
+    public function unassignTask($user_id) {
+        Application::$app->db->query("delete from assignments where user_id = ? and task_id = ?",[$user_id,$this->id]);
         return true;
     }
 }
