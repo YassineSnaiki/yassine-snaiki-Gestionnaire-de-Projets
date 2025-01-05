@@ -39,8 +39,4 @@ class User {
         $this->id = $id;
         return true;
     }
-    private static function prepare($sql) {
-        return Application::$app->db->pdo->prepare($sql);
-    }
-    
 }

@@ -9,7 +9,7 @@ class Task {
     public string $title;
     public string $description;
     public string $project_id;
-    public string $status; // 'todo', 'doing', 'review', 'done'
+    public string $status; 
     public string $tag;
     public string $created_at;
     public $assignees = [];
@@ -20,17 +20,6 @@ class Task {
         }
     }
     public static function findByProject($project_id) {
-        // $tasks = Application::$app->db->query("SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at ASC", [$project_id])->getAll();
-        // $taskInstances = [];
-        // foreach ($tasks as $task) {
-        //     $assignees = Application::$app->db->query('select u.firstname,u.lastname,u.email from users u join assignments a on u.id = a.user_id join tasks t on a.task_id = t.id where t.id = ?',[$task['id']])->getAll();
-        //     $task['assignees'] = [];
-        //     foreach ($assignees as $assignee) {
-        //     $task['assignees'][]= new User($assignee);
-        // }
-        //     $taskInstances[] = new self($task);
-        // }
-        // return $taskInstances;
         $tasksIds = Application::$app->db->query("SELECT id FROM tasks WHERE project_id = ? ORDER BY created_at ASC", [$project_id])->getAll();
         $tasks = [];
         foreach ($tasksIds as $taskId) {

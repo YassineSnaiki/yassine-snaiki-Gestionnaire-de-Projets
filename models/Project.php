@@ -15,7 +15,7 @@ class Project {
     public string $lastname;
     public string $created_at;
 
-    public $contributions = [];
+    public $contributers = [];
 
 
 
