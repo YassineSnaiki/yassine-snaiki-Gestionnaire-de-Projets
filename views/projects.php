@@ -1,20 +1,11 @@
-<?php
-/** @var array $projects */
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projects - Project Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <a href="logout">logout</a>
+
+
+
+
     <div class="min-h-screen p-6">
         <div class="max-w-6xl mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">My Projects</h1>
+                <h1 class="text-3xl font-bold text-gray-900">Projects</h1>
                 <button onclick="createProject()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     Create Project
                 </button>
@@ -27,10 +18,18 @@
                         <p class="text-gray-600 mb-4"><?= htmlspecialchars($project->description) ?></p>
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-500"><?= date('M d, Y', strtotime($project->created_at)) ?></span>
-                            <a href="/kanban?id=<?= $project->id?>" 
-                               class="text-blue-600 hover:text-blue-800 font-medium">
-                                View Kanban →
-                            </a>
+                            <?php 
+                            $contributersIds = array_map(function ($contributer) {
+                                return $contributer->id;
+                            }, $project->contributers);
+                            
+                            if ($project->user_id === $_SESSION['user']['id'] || in_array($_SESSION['user']['id'], $contributersIds)): 
+                            ?>
+                                <a href="/kanban?id=<?= $project->id?>" 
+                                   class="text-blue-600 hover:text-blue-800 font-medium">
+                                    View Kanban →
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -73,14 +72,4 @@
         </div>
     </div>
 
-    <script>
-        function createProject() {
-            document.getElementById('projectModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('projectModal').classList.add('hidden');
-        }
-    </script>
-</body>
-</html>
+    <script src="./js/projects.js"></script>
