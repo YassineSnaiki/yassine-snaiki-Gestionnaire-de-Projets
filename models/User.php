@@ -9,13 +9,17 @@ class User {
     public  $firstname;
     public  $lastname;
     public  $email;
-    public  $password;
+    public  $password = '';
 
     //$id, $firstname, $lastname, $email, $password
     public function __construct($user){
         foreach ($user as $key => $value) {
             $this->$key = $value;
         }
+    }
+    public static function getAll(){
+        $allUsers = Application::$app->db->query("select * from users")->getAll();
+        return $allUsers;
     }
     public static function validate($credentials){
         foreach ($credentials as $cred) {

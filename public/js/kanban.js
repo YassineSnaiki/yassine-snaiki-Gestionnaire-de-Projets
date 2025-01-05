@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     drake.on('drag',()=>{
         contributorForm.classList.add('hidden');
-        const allForms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form');
+        const allForms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form, .assign-form');
         allForms.forEach(menu => {
             menu.classList.add('opacity-0', 'invisible', 'translate-y-2');
         });
@@ -49,13 +49,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-
 const allMenus = document.querySelectorAll('.task-menu');
+
+// Function to hide all toggleable forms
+function hideToggleableForms() {
+    const forms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form, .assign-form');
+    forms.forEach(form => {
+        form.classList.add('opacity-0', 'invisible', 'translate-y-2');
+    });
+}
+
+// Add event listeners for drag events
+document.addEventListener('dragstart', hideToggleableForms);
+document.addEventListener('dragend', hideToggleableForms);
+
 // Toggle task form
 function toggleTaskForm(status) {
     const forms = document.querySelectorAll('.task-form');
     const form = document.getElementById(status + '-form');
-    console.log(forms);  
     [...forms].filter(form=>form.id !== status + '-form').forEach(form => {
         form.classList.add('hidden');
     });
@@ -81,8 +92,8 @@ function toggleMenu(taskId) {
 
 // Close menus when clicking outside
 document.addEventListener('click', function(event) {
-    if (!event.target.closest('.btn-more') && !event.target.closest('.tag-form') && !event.target.closest('.delete-confirm')) {               
-        const allForms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form');
+    if (!event.target.closest('.btn-more') && !event.target.closest('.tag-form') && !event.target.closest('.delete-confirm') && !event.target.closest('.assign-form')) {               
+        const allForms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form, .assign-form');
         allForms.forEach(menu => {
             menu.classList.add('opacity-0', 'invisible', 'translate-y-2');
         });
@@ -129,14 +140,57 @@ function closeTagForm(taskId) {
     event.stopPropagation();
 }
 
+// Show/hide assign form
+function showAssignForm(taskId) {
+    const menu = document.getElementById(`menu-${taskId}`);
+    const assignForm = document.getElementById(`assign-form-${taskId}`);
+    
+    menu.classList.add('opacity-0', 'invisible', 'translate-y-2');
+    assignForm.classList.remove('opacity-0', 'invisible', 'translate-y-2');
+    event.stopPropagation();
+}
+
+function closeAssignForm(taskId) {
+    const assignForm = document.getElementById(`assign-form-${taskId}`);
+    assignForm.classList.add('opacity-0', 'invisible', 'translate-y-2');
+    event.stopPropagation();
+}
+
 const contributorForm = document.getElementById('contributorForm');
 const contributorButton = document.querySelector('.btn-manage-contributers');
 
 contributorButton.addEventListener('click', function(e) {
     contributorForm.classList.toggle('hidden');
 });
+
 document.addEventListener('click', function(e) {
     if(!e.target.closest('#contributorForm') && !e.target.matches('.btn-manage-contributers'))
     contributorForm.classList.add('hidden');
 });
 
+const selectContributor = document.querySelector('.select-contributor');
+const btnAddContributor = document.querySelector('.btn-add-contributor');
+const selectAssignees = document.querySelectorAll('.assign-form select');
+const btnAddAssignees = document.querySelectorAll('.assign-form button[type="submit"]');
+
+selectContributor.addEventListener('change', function() {
+    if(this.value !== '') 
+        btnAddContributor.classList.remove('opacity-0', 'invisible');
+    else 
+        btnAddContributor.classList.add('opacity-0', 'invisible');
+});
+
+// Hide all assignment form add buttons initially
+btnAddAssignees.forEach(btn => {
+    btn.classList.add('opacity-0', 'invisible');
+});
+
+// Add change event listeners to all assignment selects
+selectAssignees.forEach((select, index) => {
+    select.addEventListener('change', function() {
+        if(this.value !== '') 
+            btnAddAssignees[index].classList.remove('opacity-0', 'invisible');
+        else 
+            btnAddAssignees[index].classList.add('opacity-0', 'invisible');
+    });
+});
