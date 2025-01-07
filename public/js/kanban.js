@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     drake.on('drag',()=>{
         contributorForm.classList.add('hidden');
+        
         const allForms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form, .assign-form');
         allForms.forEach(menu => {
             menu.classList.add('opacity-0', 'invisible', 'translate-y-2');
@@ -59,9 +60,6 @@ function hideToggleableForms() {
     });
 }
 
-// Add event listeners for drag events
-document.addEventListener('dragstart', hideToggleableForms);
-document.addEventListener('dragend', hideToggleableForms);
 
 // Toggle task form
 function toggleTaskForm(status) {
@@ -157,14 +155,23 @@ function closeAssignForm(taskId) {
 }
 
 const contributorForm = document.getElementById('contributorForm');
-const contributorButton = document.querySelector('.btn-manage-contributers');
+const contributorButton = document.querySelector('.btn-manage-contributors');
+
+//////////////////////
+
+
 
 contributorButton.addEventListener('click', function(e) {
     contributorForm.classList.toggle('hidden');
 });
 
+
+
+
+////////////////////
+
 document.addEventListener('click', function(e) {
-    if(!e.target.closest('#contributorForm') && !e.target.matches('.btn-manage-contributers'))
+    if(!e.target.closest('#contributorForm') && !e.target.matches('.btn-manage-contributors'))
     contributorForm.classList.add('hidden');
 });
 

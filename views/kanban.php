@@ -1,8 +1,8 @@
 <?php
 use app\helpers\Dump;
-$contributersIds = array_map(function ($contributer) {
-    return $contributer->id;
-}, $project->contributers);
+$contributorsIds = array_map(function ($contributor) {
+    return $contributor->id;
+}, $project->contributors);
 ?>
     <div class="min-h-screen p-6 relative">
         <div class="max-w-7xl mx-auto">
@@ -37,9 +37,10 @@ $contributersIds = array_map(function ($contributer) {
                 <div>
                 <a href="/" class="text-blue-600 hover:text-blue-800 block">← Back to Projects</a>
                 <?php if ($project->user_id === $_SESSION['user']['id']): ?>
-                    <button class="btn-manage-contributers text-gray-400 mt-2 hover:text-gray-700 transition-colors" >Manage contributers</button>
+                    <button class="btn-manage-contributors text-gray-400 mt-2 hover:text-gray-700 transition-colors" >Manage contributors</button>
                 <?php endif; ?>
-                    <div id="contributorForm"  class="hidden absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] bg-white rounded-lg shadow p-10 z-50">
+                    <div id="contributorForm"  class="<?= isset($_SESSION['cf_open']) ? '' : 'hidden'?> absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] bg-white rounded-lg shadow p-10 z-50">
+                    <?php unset($_SESSION['cf_open'])?>    
                     <form class=" bg-white rounded-lg shadow p-4" action="add-contribution" method="POST">
                         <input type="hidden" name="project_id" value="<?=$project->id?>">
                         <div class="flex items-center gap-20">
@@ -47,7 +48,7 @@ $contributersIds = array_map(function ($contributer) {
                                 <option class="hidden">Select Contributor</option>
                                 <?php foreach($allUsers as $user): ?>
                                     <?php
-                                        if($user['id'] !== $project->user_id  && !in_array($user['id'],$contributersIds)) {
+                                        if($user['id'] !== $project->user_id  && !in_array($user['id'],$contributorsIds)) {
                                             echo "<option value='{$user['id']}'>{$user['firstname']}  {$user['lastname']}</option>";
                                         }
                                         ?>
@@ -57,14 +58,26 @@ $contributersIds = array_map(function ($contributer) {
                         </div>
                     </form>
                     <ul class=" mt-5 space-y-2">
-                        <?php foreach($project->contributers as $contributer): ?>
-                        <li class="flex w-full justify-between">
-                            <p><?=$contributer->firstname?> <?=$contributer->lastname?></p>
-                            <form action="delete-contribution" method="POST">
-                                <input type="hidden" name="user_id" value="<?=$contributer->id?>">
-                                <input type="hidden" name="project_id" value="<?=$project->id?>">
-                                <button type="submit" class="btn btn-success rounded-full flex justify-center items-center   bg-red-50 w-8 h-8 text-lg hover:bg-red-100 transition-colors">-</button>
-                            </form>
+                        <?php foreach($project->contributors as $contributor): ?>
+                        <li class="flex w-full justify-between items-center">
+                            <p><?=$contributor->firstname?> <?=$contributor->lastname?></p>
+                            <div class="flex items-center gap-2">
+                                <form action="/update-role" method="POST" class="flex items-center gap-2">
+                                    <input type="hidden" name="user_id" value="<?=$contributor->id?>">
+                                    <input type="hidden" name="project_id" value="<?=$project->id?>">
+                                    <select name="role" class="form-select text-sm py-1 px-2 pr-8 border rounded">
+                                        <option value="read" <?=$contributor->role === 'read' ? 'selected' : ''?>>read</option>
+                                        <option value="write" <?=$contributor->role === 'write' ? 'selected' : ''?>>write</option>
+                                        <option value="manage" <?=$contributor->role === 'manage' ? 'selected' : ''?>>manage</option>
+                                    </select>
+                                    <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">Save</button>
+                                </form>
+                                <form action="delete-contribution" method="POST">
+                                    <input type="hidden" name="user_id" value="<?=$contributor->id?>">
+                                    <input type="hidden" name="project_id" value="<?=$project->id?>">
+                                    <button type="submit" class="btn btn-success rounded-full flex justify-center items-center bg-red-50 w-8 h-8 text-lg hover:bg-red-100 transition-colors">-</button>
+                                </form>
+                            </div>
                         </li>
                         <?php endforeach;?>
                     </ul>
@@ -72,7 +85,7 @@ $contributersIds = array_map(function ($contributer) {
                 </div>
             </div>
 
-            <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            <div class="overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 <div class="grid grid-cols-4 gap-6 items-start min-w-[1200px] p-1">
                 <!-- Todo Column -->
                 <div class="bg-white rounded-lg shadow p-4">
@@ -159,7 +172,7 @@ $contributersIds = array_map(function ($contributer) {
                                                                             return $assignee->id;
                                                                         }, $task->assignees);
             
-                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributersIds) && !in_array($user['id'],$assigneesIds)) {
+                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributorsIds) && !in_array($user['id'],$assigneesIds)) {
                                                                                 echo "<option value='{$user['id']}'>{$user['firstname']}  {$user['lastname']}</option>";
                                                                             }
                                                                             ?>
@@ -305,7 +318,7 @@ $contributersIds = array_map(function ($contributer) {
                                                                             return $assignee->id;
                                                                         }, $task->assignees);
             
-                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributersIds) && !in_array($user['id'],$assigneesIds)) {
+                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributorsIds) && !in_array($user['id'],$assigneesIds)) {
                                                                                 echo "<option value='{$user['id']}'>{$user['firstname']}  {$user['lastname']}</option>";
                                                                             }
                                                                             ?>
@@ -452,7 +465,7 @@ $contributersIds = array_map(function ($contributer) {
                                                                             return $assignee->id;
                                                                         }, $task->assignees);
             
-                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributersIds) && !in_array($user['id'],$assigneesIds)) {
+                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributorsIds) && !in_array($user['id'],$assigneesIds)) {
                                                                                 echo "<option value='{$user['id']}'>{$user['firstname']}  {$user['lastname']}</option>";
                                                                             }
                                                                             ?>
@@ -462,7 +475,7 @@ $contributersIds = array_map(function ($contributer) {
                                                         </div>
                                                     </form>
                                                     <div class="mt-3 space-y-2">
-                                                    <?php foreach($task->assignees as $assignee): ?>
+                                                        <?php foreach($task->assignees as $assignee): ?>
                                                         <div class="flex items-center justify-between text-sm">
                                                             <span><?=$assignee->firstname?> <?=$assignee->lastname?></span>
                                                             <form action="/unassign-task" method="POST">
@@ -599,7 +612,7 @@ $contributersIds = array_map(function ($contributer) {
                                                                             return $assignee->id;
                                                                         }, $task->assignees);
             
-                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributersIds) && !in_array($user['id'],$assigneesIds)) {
+                                                                            if($user['id'] !== $project->user_id  && in_array($user['id'],$contributorsIds) && !in_array($user['id'],$assigneesIds)) {
                                                                                 echo "<option value='{$user['id']}'>{$user['firstname']}  {$user['lastname']}</option>";
                                                                             }
                                                                             ?>
