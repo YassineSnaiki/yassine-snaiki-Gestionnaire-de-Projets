@@ -59,17 +59,18 @@ class ProjectController extends Controller {
         $project = Project::findOne($project_id);
         
         // Check if user is owner or contributor
-        $contributersIds = array_map(function ($contributer) {
-            return $contributer->id;
-        }, $project->contributers);
+        $contributorsIds = array_map(function ($contributor) {
+            return $contributor->id;
+        }, $project->contributors);
 
-        if ($project->user_id !== $_SESSION['user']['id'] && !in_array($_SESSION['user']['id'], $contributersIds)) {
+        if ($project->user_id !== $_SESSION['user']['id'] && !in_array($_SESSION['user']['id'], $contributorsIds)) {
             header('Location: /');
             exit;
         }
         
         $tasks = Task::findByProject($project_id);
         $allUsers = User::getAll();
+        
         return $this->render("kanban",[
             "project"=> $project,
             "tasks"=> $tasks,
@@ -116,6 +117,7 @@ class ProjectController extends Controller {
         $project = Project::findOne( $request->getBody()["project_id"] );
         if($project->addContribution($request->getBody()["user_id"])){
             $id = $request->getBody()['project_id'];
+            $_SESSION['cf_open'] = true;
             header("Location: /kanban?id=$id");
             exit;
         }   
@@ -124,6 +126,7 @@ class ProjectController extends Controller {
         $project = Project::findOne( $request->getBody()["project_id"] );
         if($project->deleteContribution($request->getBody()["user_id"])){
             $id = $request->getBody()['project_id'];
+            $_SESSION['cf_open'] = true;
             header("Location: /kanban?id=$id");
             exit;
         }   

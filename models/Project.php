@@ -15,7 +15,7 @@ class Project {
     public string $lastname;
     public string $created_at;
 
-    public $contributers = [];
+    public $contributors = [];
 
 
 
@@ -47,11 +47,12 @@ class Project {
     public static function findOne($id) {
         $project = Application::$app->db->query("select * from projects where id = ?",[$id])->getOne();
         $admin = Application::$app->db->query("select firstname,lastname from users where id = ?",[$project['user_id']])->getOne();
-        $contributers = Application::$app->db->query('select u.id,u.email,u.firstname,u.lastname from users u join contributions c on u.id = c.user_id join projects p on c.project_id = p.id where p.id = ?',[$id])->getAll();
+        $contributors = Application::$app->db->query('select u.id,u.email,u.firstname,u.lastname from users u join contributions c on u.id = c.user_id join projects p on c.project_id = p.id where p.id = ?',[$id])->getAll();
        
-        $project['contributers'] = [];
-        foreach ($contributers as $contributer) {
-            $project['contributers'][]= new User($contributer);
+        $project['contributors'] = [];
+        foreach ($contributors as $contributor) {
+            $contributor['role'] = Application::$app->db->query("select role_name from contributions where user_id = ? and project_id = ?",[$contributor['id'],$id])->getOne()['role_name']; 
+            $project['contributors'][]= new User($contributor);
         }
         $project['firstname'] = $admin['firstname'];
         $project['lastname'] = $admin['lastname'];
