@@ -87,14 +87,57 @@ class Database {
                 PRIMARY KEY (user_id, task_id)
             )
         ");
+        //roles
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS roles (
+                name VARCHAR(20) PRIMARY KEY
+            );
+            INSERT INTO roles (name) VALUES 
+            ('read'), ('write'), ('manage')
+            ON CONFLICT (name) DO NOTHING;
+        ");
+        //permissions
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS permissions(
+                name VARCHAR(20) PRIMARY KEY
+            );
+            INSERT INTO permissions (name) VALUES
+            ('create task'),
+            ('delete task'),
+            ('assign task'),
+            ('manage contributors'),
+            ('delete project')
+            ON CONFLICT (name) DO NOTHING;
+        ");
+        //roles_permissions
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS roles_permissions (
+                role_name VARCHAR(20) NOT NULL REFERENCES roles(name) ON DELETE CASCADE,
+                permission_name VARCHAR(20) NOT NULL REFERENCES permissions(name) ON DELETE CASCADE,
+                PRIMARY KEY (role_name, permission_name)
+            );
+            INSERT INTO roles_permissions (role_name, permission_name) VALUES
+            ('write', 'create task'),
+            ('write', 'delete task')
+            ON CONFLICT DO NOTHING;
+
+            INSERT INTO roles_permissions (role_name, permission_name) VALUES
+            ('manage', 'create task'),
+            ('manage', 'delete task'),
+            ('manage', 'assign task'),
+            ('manage', 'manage contributors')
+            ON CONFLICT DO NOTHING;
+        ");
         // contributions
         $this->pdo->exec("
             CREATE TABLE IF NOT EXISTS contributions (
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                role_name VARCHAR(20) NOT NULL REFERENCES roles(name) ON DELETE CASCADE default 'write',
                 PRIMARY KEY (user_id, project_id)
             )
         ");
+        
 
         // Create indexes for better performance
         $this->pdo->exec("
