@@ -19,11 +19,11 @@
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-500"><?= date('M d, Y', strtotime($project->created_at)) ?></span>
                             <?php 
-                            $contributersIds = array_map(function ($contributer) {
+                            $contributorsIds = array_map(function ($contributer) {
                                 return $contributer->id;
-                            }, $project->contributers);
+                            }, $project->contributors);
                             
-                            if ($project->user_id === $_SESSION['user']['id'] || in_array($_SESSION['user']['id'], $contributersIds)): 
+                            if ($project->user_id === $_SESSION['user']['id'] || in_array($_SESSION['user']['id'], $contributorsIds)): 
                             ?>
                                 <a href="/kanban?id=<?= $project->id?>" 
                                    class="text-blue-600 hover:text-blue-800 font-medium">

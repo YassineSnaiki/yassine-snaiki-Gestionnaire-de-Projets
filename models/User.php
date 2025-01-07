@@ -10,6 +10,7 @@ class User {
     public  $lastname;
     public  $email;
     public  $password = '';
+    public $role = null;
 
     //$id, $firstname, $lastname, $email, $password
     public function __construct($user){
