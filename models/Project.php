@@ -46,6 +46,9 @@ class Project {
 
     public static function findOne($id) {
         $project = Application::$app->db->query("select * from projects where id = ?",[$id])->getOne();
+        if(!$project) {
+            return false;
+        }
         $admin = Application::$app->db->query("select firstname,lastname from users where id = ?",[$project['user_id']])->getOne();
         $contributors = Application::$app->db->query('select u.id,u.email,u.firstname,u.lastname from users u join contributions c on u.id = c.user_id join projects p on c.project_id = p.id where p.id = ?',[$id])->getAll();
        
