@@ -11,12 +11,33 @@ class User {
     public  $email;
     public  $password = '';
     public $role = null;
+    public $isadmin = false;
 
-    //$id, $firstname, $lastname, $email, $password
     public function __construct($user){
         foreach ($user as $key => $value) {
             $this->$key = $value;
         }
+    }
+    public function getId(){
+        return $this->id;
+    }
+    public function getFirstName(){
+        return $this->firstname;
+    }
+    public function getLastName(){
+        return $this->lastname;
+    }
+    public function getEmail(){
+        return $this->email;
+    }
+    public function getPassword(){
+        return $this->password;
+    }
+    public function getRole(){
+        return $this->role;
+    }
+    public function getIsadmin(){
+        return $this->isadmin;
     }
     public static function getAll(){
         $allUsers = Application::$app->db->query("select * from users")->getAll();
