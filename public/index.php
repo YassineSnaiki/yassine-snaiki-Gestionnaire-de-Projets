@@ -45,6 +45,7 @@ $app->router->post('/delete-contribution', [ContributionController::class, 'dele
 
 
 $app->router->get('/kanban', [ProjectController::class, 'kanban']);
+$app->router->get('/project-details', [ProjectController::class, 'details']);
 
 
 $app->router->post('/add-task', [TaskController::class, 'addTask']);

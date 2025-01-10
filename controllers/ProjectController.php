@@ -85,4 +85,35 @@ class ProjectController extends Controller {
             'allUsers'=>$allUsers
         ]);
     }
+
+    public function details($request) {
+          $project_id = $request->getBody()['id'];
+        if (!$project_id) {
+            header('Location: /');
+            exit;
+        }
+        $project = Project::findOne($project_id);
+        if(!$project) {
+            header('Location: /');
+            exit;
+        }
+        // Check if user is owner or contributor
+        $contributorsIds = array_map(function ($contributor) {
+            return $contributor->id;
+        }, $project->contributors);
+
+        if ($project->user_id !== $_SESSION['user']['id'] && !in_array($_SESSION['user']['id'], $contributorsIds)) {
+            header('Location: /');
+            exit;
+        }
+        
+        $tasks = Task::findByProject($project_id);
+        $allUsers = User::getAll();
+
+        return $this->render("project-details",[
+            "project"=> $project,
+            "tasks"=> $tasks,
+            'allUsers'=>$allUsers
+        ]);
+    }
 }

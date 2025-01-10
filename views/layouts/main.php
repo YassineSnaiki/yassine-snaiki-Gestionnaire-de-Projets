@@ -21,9 +21,18 @@
                     </div>
                     <!-- Navigation Links -->
                     <div class="hidden md:ml-6 md:flex md:space-x-8">
-                        <a href="/" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-indigo-500">
-                            Projects
-                        </a>
+                        <div class="flex space-x-4">
+                            <?php if (isset($_SESSION['user'])): ?>
+                                <?php if (isset($_GET['id'])): ?>
+                                    <a href="/kanban?id=<?= $_GET['id'] ?>" class="<?= $_SERVER['REQUEST_URI'] === '/kanban?id=' . $_GET['id'] ? 'border-b-2 border-indigo-500' : '' ?> inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 ">Kanban</a>
+                                    <a href="/project-details?id=<?= $_GET['id'] ?>" class="<?= $_SERVER['REQUEST_URI'] === '/project-details?id=' . $_GET['id'] ? 'border-b-2 border-indigo-500' : '' ?> inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 ">Details</a>
+                                <?php else: ?>
+                                    <a href="/" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 border-b-2 border-indigo-500">
+                                       Projects
+                                    </a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
                 <!-- Right side -->
@@ -79,4 +88,3 @@
     </script>
 </body>
 </html>
-
