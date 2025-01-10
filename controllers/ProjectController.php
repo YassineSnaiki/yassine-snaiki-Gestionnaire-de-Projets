@@ -18,14 +18,12 @@ class ProjectController extends Controller {
         }
     }
     public function projects(){
-        $projects = Project::findAll();
-        
+        $projects = Project::findAll(); 
         return $this->render('projects', [
-            'projects' => $projects,
-            
+            'projects' => $projects,   
         ]);
     }
-    public function handleProjects($request) {
+    public function addProject($request) {
        
         foreach($request->getBody() as $key => $value) {
             $$key = $value;
@@ -45,19 +43,29 @@ class ProjectController extends Controller {
 
     public function deleteProject($request){
         $project = Project::findOne($request->getBody()['project_id']);
+        echo $project->id;
+        if($project->user_id !== $_SESSION['user']['id']) {
+            $_SESSION['error'] = 'not authorized';
+            header('Location: /');
+            exit;
+        }
         if($project->delete()){
             header('Location: /');
             exit;
         }
     }
     public function kanban($request){
+       
         $project_id = $request->getBody()['id'];
         if (!$project_id) {
             header('Location: /');
             exit;
         }
         $project = Project::findOne($project_id);
-        
+        if(!$project) {
+            header('Location: /');
+            exit;
+        }
         // Check if user is owner or contributor
         $contributorsIds = array_map(function ($contributor) {
             return $contributor->id;
@@ -70,82 +78,11 @@ class ProjectController extends Controller {
         
         $tasks = Task::findByProject($project_id);
         $allUsers = User::getAll();
-        
+
         return $this->render("kanban",[
             "project"=> $project,
             "tasks"=> $tasks,
             'allUsers'=>$allUsers
         ]);
-    }
-
-    public function updateTaskStatus($request) {
-        if (isset($request->getBody()['task_id']) && isset($request->getBody()['status'])) {
-            $task = Task::findById($request->getBody()['task_id']);
-            $task->updateStatus($request->getBody()['status']);
-            echo json_encode(['success' => true]);
-            exit;
-        }
-        echo json_encode(['success' => false]);
-        exit;
-    }
-    public function changeTaskTag($request) {
-        if (isset($request->getBody()['task_id']) && isset($request->getBody()['tag'])) {
-            $task = Task::findById($request->getBody()['task_id']);
-            $task->changeTag($request->getBody()['tag']);
-            header("Location: /kanban?id={$task->project_id}");
-            // echo json_encode(['success' => true]);
-            // exit;
-        }
-        // echo json_encode(['success' => false]);
-        // exit;
-    }
-    public function addTask($request){
-        $task = new Task($request->getBody());
-        if($task->save()){
-            header("Location: /kanban?id=$task->project_id");
-            exit;
-        }
-    }
-    public function deleteTask($request){
-        $task = Task::findById( $request->getBody()["task_id"] );
-        if($task->delete()){
-            header("Location: /kanban?id=$task->project_id");
-            exit;
-        }
-    }
-    public function addContribution($request){
-        $project = Project::findOne( $request->getBody()["project_id"] );
-        if($project->addContribution($request->getBody()["user_id"])){
-            $id = $request->getBody()['project_id'];
-            $_SESSION['cf_open'] = true;
-            header("Location: /kanban?id=$id");
-            exit;
-        }   
-    }
-    public function deleteContribution($request){
-        $project = Project::findOne( $request->getBody()["project_id"] );
-        if($project->deleteContribution($request->getBody()["user_id"])){
-            $id = $request->getBody()['project_id'];
-            $_SESSION['cf_open'] = true;
-            header("Location: /kanban?id=$id");
-            exit;
-        }   
-    }
-
-    public function assignTask($request){
-        $task = Task::findById( $request->getBody()["task_id"]);
-        if($task->assignTask($request->getBody()["user_id"])) {
-            $id = $task->project_id;
-            header("Location: /kanban?id=$id");
-            exit;
-        }
-    }
-    public function unassignTask($request){
-        $task = Task::findById( $request->getBody()["task_id"]);
-        if($task->unassignTask($request->getBody()["user_id"])) {
-            $id = $task->project_id;
-            header("Location: /kanban?id=$id");
-            exit;
-        }
     }
 }
