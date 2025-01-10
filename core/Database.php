@@ -3,7 +3,7 @@
 namespace app\core;
 
 class Database {
-    public \PDO $pdo;
+    private \PDO $pdo;
     private $stmt;
     private static $instance = null;
 
@@ -52,6 +52,7 @@ class Database {
                 lastname VARCHAR(255) NOT NULL,
                 email VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
+                isadmin BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ");
@@ -105,6 +106,7 @@ class Database {
             ('create task'),
             ('delete task'),
             ('assign task'),
+            ('change tag'),
             ('manage contributors'),
             ('delete project')
             ON CONFLICT (name) DO NOTHING;
@@ -122,12 +124,25 @@ class Database {
             ON CONFLICT DO NOTHING;
 
             INSERT INTO roles_permissions (role_name, permission_name) VALUES
+
             ('manage', 'create task'),
             ('manage', 'delete task'),
             ('manage', 'assign task'),
+            ('manage', 'change tag'),
             ('manage', 'manage contributors')
             ON CONFLICT DO NOTHING;
         ");
+        // Insert admin user if users table is empty
+        $statement = $this->pdo->query("SELECT COUNT(*) FROM users");
+        $count = $statement->fetchColumn();
+       
+        if ($count === 0) {
+            $hashedPassword = password_hash('admin', PASSWORD_DEFAULT);
+            $this->pdo->exec("
+                INSERT INTO users (firstname, lastname, email, password, isadmin) 
+                VALUES ('admin', 'admin', 'admin@gmail.com', '$hashedPassword', TRUE)
+            ");
+        }
         // contributions
         $this->pdo->exec("
             CREATE TABLE IF NOT EXISTS contributions (
