@@ -1,9 +1,13 @@
 <?php
 use app\helpers\Dump;
+use app\helpers\IsPermited;
 $contributorsIds = array_map(function ($contributor) {
     return $contributor->id;
 }, $project->contributors);
 ?>
+
+    <input type="hidden" class="can-drag hidden" value="<?=IsPermited::verify($project->id,$_SESSION['user']['id'],'update task status')?>">
+    <script>console.log("<?=IsPermited::verify($project->id,$_SESSION['user']['id'],'update task status')?>")</script>
     <div class="min-h-screen p-6 relative">
         <div class="max-w-7xl mx-auto">
             <div class="flex justify-between items-center mb-6">
@@ -11,7 +15,7 @@ $contributorsIds = array_map(function ($contributor) {
                     <div class="flex items-center gap-2">
                         <h1 class="text-3xl font-bold text-gray-900"><?= htmlspecialchars($project->title) ?></h1>
                         <div class="relative inline-block">
-                            <?php if ($project->user_id === $_SESSION['user']['id']): ?>
+                            <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'delete project')): ?>
                                 <button type="button" onclick="document.getElementById('delete-project-form').classList.toggle('hidden')" class="text-red-500 hover:text-red-600 transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -36,7 +40,7 @@ $contributorsIds = array_map(function ($contributor) {
                 </div>
                 <div>
                 <a href="/" class="text-blue-600 hover:text-blue-800 block">← Back to Projects</a>
-                <?php if ($project->user_id === $_SESSION['user']['id']): ?>
+                <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'manage contributors')): ?>
                     <button class="btn-manage-contributors text-gray-400 mt-2 hover:text-gray-700 transition-colors" >Manage contributors</button>
                 <?php endif; ?>
                     <div id="contributorForm"  class="<?= isset($_SESSION['cf_open']) ? '' : 'hidden'?> absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] bg-white rounded-lg shadow p-10 z-50">
@@ -59,10 +63,11 @@ $contributorsIds = array_map(function ($contributor) {
                     </form>
                     <ul class=" mt-5 space-y-2">
                         <?php foreach($project->contributors as $contributor): ?>
-                        <li class="flex w-full justify-between items-center">
+                            <?php if($contributor->id !== $_SESSION['user']['id']) :?>
+                                <li class="flex w-full justify-between items-center">
                             <p><?=$contributor->firstname?> <?=$contributor->lastname?></p>
                             <div class="flex items-center gap-2">
-                                <form action="/update-role" method="POST" class="flex items-center gap-2">
+                                <form action="/change-role" method="POST" class="flex items-center gap-2">
                                     <input type="hidden" name="user_id" value="<?=$contributor->id?>">
                                     <input type="hidden" name="project_id" value="<?=$project->id?>">
                                     <select name="role" class="form-select text-sm py-1 px-2 pr-8 border rounded">
@@ -79,6 +84,7 @@ $contributorsIds = array_map(function ($contributor) {
                                 </form>
                             </div>
                         </li>
+                            <?php endif;?>     
                         <?php endforeach;?>
                     </ul>
                     </div>
@@ -116,10 +122,16 @@ $contributorsIds = array_map(function ($contributor) {
                                                 </svg>
                                             </button>
                                             <div id="menu-<?= $task->id ?>" class="task-menu absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 w-32 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
-                                                <div class="py-1">
-                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
-                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign Task</button>
-                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                <div class="py-2">
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'assign task')): ?>
+                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'change tag')): ?>
+                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'delete task')): ?>
+                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                             <div id="delete-form-<?= $task->id ?>" class="delete-confirm absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
@@ -203,7 +215,7 @@ $contributorsIds = array_map(function ($contributor) {
                         <!-- Add Task Button and Form -->
                         
                     </div>
-                    <?php if ($project->user_id === $_SESSION['user']['id']): ?>
+                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'create task')): ?>
                     <div class="task bg-gray-50 p-4 rounded shadow-sm hover:bg-gray-100 cursor-pointer mt-5" onclick="toggleTaskForm('todo')">
                             <div class="add-task-btn">
                                 <div class="flex items-center justify-center">
@@ -262,10 +274,16 @@ $contributorsIds = array_map(function ($contributor) {
                                                 </svg>
                                             </button>
                                             <div id="menu-<?= $task->id ?>" class="task-menu absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 w-32 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
-                                                <div class="py-1">
-                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
-                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign Task</button>
-                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                <div class="py-2">
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'assign task')): ?>
+                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'change tag')): ?>
+                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'delete task')): ?>
+                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                             <div id="delete-form-<?= $task->id ?>" class="delete-confirm absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
@@ -349,7 +367,7 @@ $contributorsIds = array_map(function ($contributor) {
                         <!-- Add Task Button and Form -->
                         
                     </div>
-                    <?php if ($project->user_id === $_SESSION['user']['id']): ?>
+                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'create task')): ?>
                     <div class="task bg-gray-50 p-4 rounded shadow-sm hover:bg-gray-100 cursor-pointer mt-5" onclick="toggleTaskForm('doing')">
                             <div class="add-task-btn">
                                 <div class="flex items-center justify-center">
@@ -409,10 +427,16 @@ $contributorsIds = array_map(function ($contributor) {
                                                 </svg>
                                             </button>
                                             <div id="menu-<?= $task->id ?>" class="task-menu absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 w-32 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
-                                                <div class="py-1">
-                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
-                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign Task</button>
-                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                <div class="py-2">
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'assign task')): ?>
+                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'change tag')): ?>
+                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'delete task')): ?>
+                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                             <div id="delete-form-<?= $task->id ?>" class="delete-confirm absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
@@ -458,7 +482,7 @@ $contributorsIds = array_map(function ($contributor) {
                                                     <input type="hidden" name="task_id" value="<?=$task->id?>">
                                                         <div class="flex items-center gap-2">
                                                             <select class="form-select text-sm" name="user_id">
-                                                                <option value="" class="hidden">Select User</option>
+                                                                <option class="hidden">Select User</option>
                                                                 <?php foreach($allUsers as $user): ?>
                                                                     <?php
                                                                         $assigneesIds = array_map(function ($assignee) {
@@ -496,7 +520,7 @@ $contributorsIds = array_map(function ($contributor) {
                         <!-- Add Task Button and Form -->
                         
                     </div>
-                    <?php if ($project->user_id === $_SESSION['user']['id']): ?>
+                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'create task')): ?>
                     <div class="task bg-gray-50 p-4 rounded shadow-sm hover:bg-gray-100 cursor-pointer mt-5" onclick="toggleTaskForm('review')">
                             <div class="add-task-btn">
                                 <div class="flex items-center justify-center">
@@ -556,10 +580,16 @@ $contributorsIds = array_map(function ($contributor) {
                                                 </svg>
                                             </button>
                                             <div id="menu-<?= $task->id ?>" class="task-menu absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 w-32 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
-                                                <div class="py-1">
-                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
-                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign Task</button>
-                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                <div class="py-2">
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'assign task')): ?>
+                                                    <button onclick="showAssignForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Assign</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'change tag')): ?>
+                                                    <button onclick="showTagForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Change Tag</button>
+                                                    <?php endif; ?>
+                                                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'delete task')): ?>
+                                                    <button onclick="showDeleteForm('<?= $task->id ?>')" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete</button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                             <div id="delete-form-<?= $task->id ?>" class="delete-confirm absolute right-0 top-8 bg-white shadow-lg rounded-md border border-gray-200 z-50 transform translate-y-2 opacity-0 invisible transition-all duration-200 ease-in-out">
@@ -605,7 +635,7 @@ $contributorsIds = array_map(function ($contributor) {
                                                     <input type="hidden" name="task_id" value="<?=$task->id?>">
                                                         <div class="flex items-center gap-2">
                                                             <select class="form-select text-sm" name="user_id">
-                                                                <option value="" class="hidden">Select User</option>
+                                                                <option class="hidden">Select User</option>
                                                                 <?php foreach($allUsers as $user): ?>
                                                                     <?php
                                                                         $assigneesIds = array_map(function ($assignee) {
@@ -643,7 +673,7 @@ $contributorsIds = array_map(function ($contributor) {
                         <!-- Add Task Button and Form -->
                         
                     </div>
-                    <?php if ($project->user_id === $_SESSION['user']['id']): ?>
+                    <?php if (IsPermited::verify($project->id, $_SESSION['user']['id'], 'create task')): ?>
                     <div class="task bg-gray-50 p-4 rounded shadow-sm hover:bg-gray-100 cursor-pointer mt-5" onclick="toggleTaskForm('done')">
                             <div class="add-task-btn">
                                 <div class="flex items-center justify-center">

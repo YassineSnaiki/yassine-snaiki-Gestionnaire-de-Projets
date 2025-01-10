@@ -42,7 +42,7 @@
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Project</h3>
-                <form id="projectForm" action="" method="POST">
+                <form id="projectForm" action="/add-project" method="POST">
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="title">
                             Project Title
