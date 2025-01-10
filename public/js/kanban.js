@@ -1,53 +1,72 @@
 document.addEventListener('DOMContentLoaded', function() {
     const contributorForm = document.getElementById('contributorForm');
-
-    // Get all containers
-    const containers = [
+    if(document.querySelector('.can-drag').value){
+        console.log('can drag');
+        const containers = [
         document.querySelector('#todo'),
         document.querySelector('#doing'),
         document.querySelector('#review'),
         document.querySelector('#done')
-    ];
+    ].filter(container => container !== null); // Filter out any null containers
 
-    // Initialize dragula with containers and a moves function
-    var drake = dragula(containers, {
-        moves: function(el, container, handle) {
-            // Only allow dragging of task elements (those with data-id)
-            return el.hasAttribute('data-id');
-        }
-    });
-    drake.on('drag',()=>{
-        contributorForm.classList.add('hidden');
-        
-        const allForms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form, .assign-form');
-        allForms.forEach(menu => {
-            menu.classList.add('opacity-0', 'invisible', 'translate-y-2');
-        });
-        
-        
-    })
-    drake.on('drop', function(el, target, source) {
-        const taskId = el.dataset.id;
-        const newStatus = target.id;
-
-        fetch('/update-task-status', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+    // Only initialize dragula if we have containers
+    if (containers.length > 0) {
+        // Initialize dragula with containers and a moves function
+        var drake = dragula(containers, {
+            moves: function(el, container, handle) {
+                // Only allow dragging of task elements (those with data-id)
+                return el.hasAttribute('data-id');
             },
-            body: `task_id=${taskId}&status=${newStatus}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                drake.cancel(true);
+            accepts: function(el, target, source, sibling) {
+                // Additional check to ensure we're dropping into a valid container
+                return target.id === 'todo' || target.id === 'doing' || 
+                       target.id === 'review' || target.id === 'done';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            drake.cancel(true);
         });
-    });
+
+        drake.on('drag', function(el) {
+            contributorForm.classList.add('hidden');
+            
+            const allForms = document.querySelectorAll('.task-menu, .delete-confirm, .tag-form, .assign-form');
+            allForms.forEach(menu => {
+                menu.classList.add('opacity-0', 'invisible', 'translate-y-2');
+            });
+        });
+
+        drake.on('drop', function(el, target, source) {
+            if (!target || !el.dataset.id) return; // Additional safety check
+            
+            const taskId = el.dataset.id;
+            const newStatus = target.id;
+
+            fetch('/update-task-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `task_id=${taskId}&status=${newStatus}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    drake.cancel(true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                drake.cancel(true);
+                // Revert the task to its original position
+                if (source) {
+                    source.appendChild(el);
+                }
+            });
+        });
+    }}
 });
 
 const allMenus = document.querySelectorAll('.task-menu');
@@ -161,7 +180,7 @@ const contributorButton = document.querySelector('.btn-manage-contributors');
 
 
 
-contributorButton.addEventListener('click', function(e) {
+contributorButton?.addEventListener('click', function(e) {
     contributorForm.classList.toggle('hidden');
 });
 
