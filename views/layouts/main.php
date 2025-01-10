@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>window.history.forward(0);</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanban Board</title>
@@ -27,9 +28,11 @@
                 </div>
                 <!-- Right side -->
                 <div class="flex items-center">
-                    <?php if (isset($_SESSION['user']['id'])): ?>
-                        <span class="text-gray-700 mr-4"><?= $_SESSION['user']['firstname'] ?></span>
-                        <a href="/logout" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                    <?php if (isset($_SESSION['user']) || isset($_SESSION['admin'])): ?>
+                        <?php if (isset($_SESSION['user'])): ?>
+                            <span class="text-gray-700 mr-4"><?= $_SESSION['user']['firstname'] ?></span>
+                        <?php endif; ?>
+                        <a class="btn-logout inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
                             Logout
                         </a>
                     <?php else: ?>
@@ -68,5 +71,12 @@
             </div>
         </div>
     </footer>
+    <script>
+        document.querySelector('.btn-logout')?.addEventListener('click',()=>{
+            location.replace('/logout');
+            
+        })
+    </script>
 </body>
 </html>
+
